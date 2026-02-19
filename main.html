@@ -7,6 +7,7 @@
     <style>
         * {
             box-sizing: border-box;
+            -webkit-user-select: none;
             user-select: none;
         }
         body {
@@ -150,9 +151,8 @@
 
         const livesSpan = document.getElementById('livesDisplay');
         const scoreSpan = document.getElementById('scoreDisplay');
-        const levelSpan = document.getElementById('levelDisplay');
-
-        var gameActive = false;
+        const FIRE_KEY = ' ';
+        const CANCEL_KEYS = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'];
         var gameOverFlag = false;
         var score = 0;
         var lives = 3;
@@ -187,8 +187,10 @@
             space: false
         };
 
+        var now;
+
         var stars = [];
-        for (var i = 0; i < 220; i++) {
+        for (let i = 0; i < 220; i++) {
             stars.push({
                 x: Math.random() * W,
                 y: Math.random() * H,
@@ -199,13 +201,13 @@
         }
 
         function refreshUI() {
-            var hearts = '';
-            for (var i=0; i<3; i++) {
+            let hearts = '';
+            for (let i = 0; i < 3; i++) {
                 hearts += i < lives ? '❤️' : '🖤';
             }
             livesSpan.innerText = hearts;
 
-            var sc = String(score);
+            let sc = String(score);
             while (sc.length < 4) sc = '0' + sc;
             scoreSpan.innerText = sc;
 
@@ -234,13 +236,13 @@
         function spawnEnemy(now) {
             if (!gameActive) return;
 
-            var r = Math.random();
-            var type = 'normal';
+            const r = Math.random();
+            let type = 'normal';
             if (level >= 2 && r < 0.25) type = 'fast';
             else if (level >= 3 && r < 0.2) type = 'tank';
             else if (level >= 4 && r < 0.15) type = 'mini';
 
-            var w, h, speedY, color, health = 1;
+            let w, h, speedY, color, health = 1;
             switch(type) {
                 case 'fast':
                     w = 32; h = 28;
@@ -266,7 +268,7 @@
 
             speedY += (level - 1) * 0.2;
 
-            var x = Math.random() * (W - w);
+            const x = Math.random() * (W - w);
             enemies.push({
                 x: x,
                 y: -h,
@@ -281,7 +283,7 @@
         }
 
         function boom(x, y) {
-            for (var i=0; i<12; i++) {
+            for (let i = 0; i < 12; i++) {
                 explosions.push({
                     x: x + (Math.random() - 0.5) * 25,
                     y: y + (Math.random() - 0.5) * 25,
@@ -295,8 +297,8 @@
 
         function maybeDropPowerup(x, y) {
             if (Math.random() < 0.15) {
-                var typeRand = Math.random();
-                var ptype;
+                const typeRand = Math.random();
+                let ptype;
                 if (typeRand < 0.4) ptype = 'rapid';
                 else if (typeRand < 0.8) ptype = 'spread';
                 else ptype = 'life';
@@ -311,10 +313,10 @@
 
         function fire(now) {
             if (!gameActive) return false;
-            var cooldown = (rapidUntil > now) ? rapidCooldown : normalCooldown;
+            const cooldown = rapidUntil > now ? rapidCooldown : normalCooldown;
             if (now - lastShoot < cooldown) return false;
 
-            var isSpread = (spreadUntil > now);
+            const isSpread = spreadUntil > now;
             if (isSpread) {
                 bullets.push({ x: player.x + player.w/2 - 6, y: player.y - 12, w: 8, h: 20, type: 'spread' });
                 bullets.push({ x: player.x + player.w/2 - 22, y: player.y - 6, w: 8, h: 18, type: 'spread' });
@@ -332,21 +334,21 @@
             if (keys.left) player.x = Math.max(0, player.x - player.speed);
             if (keys.right) player.x = Math.min(W - player.w, player.x + player.speed);
 
-            var spawnInterval = Math.max(250, baseSpawnInterval - level * 30);
+            const spawnInterval = Math.max(250, baseSpawnInterval - level * 30);
             if (now - lastSpawn >= spawnInterval) {
                 spawnEnemy(now);
                 lastSpawn = now;
             }
 
-            for (var i=bullets.length-1; i>=0; i--) {
+            for (let i = bullets.length - 1; i >= 0; i--) {
                 bullets[i].y -= (bullets[i].type === 'spread' ? 7.5 : 9.5);
                 if (bullets[i].y + bullets[i].h < 0) {
                     bullets.splice(i, 1);
                 }
             }
 
-            for (i=enemies.length-1; i>=0; i--) {
-                var e = enemies[i];
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
                 e.y += e.speedY;
                 if (e.y + e.h > H) {
                     lives--;
@@ -361,15 +363,15 @@
                 }
             }
 
-            for (i=powerups.length-1; i>=0; i--) {
+            for (let i = powerups.length - 1; i >= 0; i--) {
                 powerups[i].y += powerups[i].speedY;
-                if (powerups[i].y > H) powerups.splice(i,1);
+                if (powerups[i].y > H) powerups.splice(i, 1);
             }
 
-            for (i=bullets.length-1; i>=0; i--) {
-                var b = bullets[i];
-                for (var j=enemies.length-1; j>=0; j--) {
-                    var e = enemies[j];
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    const e = enemies[j];
                     if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
                         bullets.splice(i, 1);
                         enemies.splice(j, 1);
@@ -377,7 +379,7 @@
                         boom(e.x + e.w/2, e.y + e.h/2);
                         maybeDropPowerup(e.x, e.y);
 
-                        var newLevel = Math.floor(score / 200) + 1;
+                        const newLevel = Math.floor(score / 200) + 1;
                         if (newLevel > level && newLevel <= 5) {
                             level = newLevel;
                         }
@@ -387,8 +389,8 @@
                 }
             }
 
-            for (i=enemies.length-1; i>=0; i--) {
-                e = enemies[i];
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const e = enemies[i];
                 if (player.x < e.x + e.w && player.x + player.w > e.x && player.y < e.y + e.h && player.y + player.h > e.y) {
                     lives--;
                     enemies.splice(i, 1);
@@ -403,8 +405,8 @@
                 }
             }
 
-            for (i=powerups.length-1; i>=0; i--) {
-                var p = powerups[i];
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                const p = powerups[i];
                 if (player.x < p.x + p.w && player.x + player.w > p.x && player.y < p.y + p.h && player.y + player.h > p.y) {
                     if (p.type === 'rapid') {
                         rapidUntil = now + rapidDuration;
@@ -422,8 +424,8 @@
                 fire(now);
             }
 
-            for (i=explosions.length-1; i>=0; i--) {
-                var ex = explosions[i];
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const ex = explosions[i];
                 ex.x += ex.vx;
                 ex.y += ex.vy;
                 ex.life -= 0.015;
@@ -432,7 +434,7 @@
         }
 
         function drawStars() {
-            for (var s of stars) {
+            for (const s of stars) {
                 ctx.fillStyle = 'rgba(255, 250, 210, ' + (0.4 + Math.random()*0.3) + ')';
                 ctx.beginPath();
                 ctx.arc(s.x, s.y, s.size*0.6, 0, 2*Math.PI);
@@ -466,16 +468,16 @@
             ctx.ellipse(player.x + player.w/2, player.y - 4, 12, 8, 0, 0, 2*Math.PI);
             ctx.fill();
 
-            var flick = Math.sin(now * 0.02) * 4 + 6;
+            const engineFlare = Math.sin(now * 0.02) * 4 + 6;
             ctx.fillStyle = '#ffb347';
             ctx.shadowColor = '#ff8024';
-            ctx.fillRect(player.x + 12, player.y + player.h-2, 8, 12 + flick);
-            ctx.fillRect(player.x + player.w - 20, player.y + player.h-2, 8, 12 + flick);
+            ctx.fillRect(player.x + 12, player.y + player.h - 2, 8, 12 + engineFlare);
+            ctx.fillRect(player.x + player.w - 20, player.y + player.h - 2, 8, 12 + engineFlare);
             ctx.restore();
         }
 
         function drawEnemies() {
-            for (var e of enemies) {
+            for (const e of enemies) {
                 ctx.save();
                 ctx.shadowColor = '#ff5f7f';
                 ctx.shadowBlur = 18;
@@ -492,14 +494,13 @@
                 } else if (e.type === 'tank') {
                     ctx.fillStyle = '#8866cc';
                     ctx.fillRect(e.x+5, e.y-3, e.w-10, 5);
-                } else if (e.type === 'mini') {
                 }
                 ctx.restore();
             }
         }
 
         function drawBullets() {
-            for (var b of bullets) {
+            for (const b of bullets) {
                 ctx.save();
                 ctx.shadowBlur = 20;
                 if (b.type === 'spread') {
@@ -515,7 +516,7 @@
         }
 
         function drawPowerups() {
-            for (var p of powerups) {
+            for (const p of powerups) {
                 ctx.save();
                 ctx.shadowBlur = 28;
                 if (p.type === 'rapid') {
@@ -540,7 +541,7 @@
         }
 
         function drawExplosions() {
-            for (var ex of explosions) {
+            for (const ex of explosions) {
                 ctx.save();
                 ctx.globalAlpha = ex.life;
                 ctx.fillStyle = ex.color;
@@ -602,35 +603,41 @@
         }
 
         function keydown(e) {
-            var k = e.key;
-            if (k === 'ArrowLeft' || k === 'Left' || k === 'a' || k === 'A') {
-                keys.left = true; e.preventDefault();
-            } else if (k === 'ArrowRight' || k === 'Right' || k === 'd' || k === 'D') {
-                keys.right = true; e.preventDefault();
-            } else if (k === ' ') {
-                keys.space = true; e.preventDefault();
-                if (gameActive) fire(performance.now());
-            }
-            if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(k)) {
+            const keyMap = {
+                'ArrowLeft': 'left', 'Left': 'left', 'a': 'left', 'A': 'left',
+                'ArrowRight': 'right', 'Right': 'right', 'd': 'right', 'D': 'right',
+                ' ': 'space'
+            };
+            const action = keyMap[e.key];
+            if (action) {
+                keys[action] = true;
                 e.preventDefault();
+                if (action === 'space' && gameActive) fire(performance.now());
             }
         }
+        
         function keyup(e) {
-            var k = e.key;
-            if (k === 'ArrowLeft' || k === 'Left' || k === 'a' || k === 'A') {
-                keys.left = false; e.preventDefault();
-            } else if (k === 'ArrowRight' || k === 'Right' || k === 'd' || k === 'D') {
-                keys.right = false; e.preventDefault();
-            } else if (k === ' ') {
-                keys.space = false; e.preventDefault();
+            const keyMap = {
+                'ArrowLeft': 'left', 'Left': 'left', 'a': 'left', 'A': 'left',
+                'ArrowRight': 'right', 'Right': 'right', 'd': 'right', 'D': 'right',
+                ' ': 'space'
+            };
+            const action = keyMap[e.key];
+            if (action) {
+                keys[action] = false;
+                e.preventDefault();
             }
         }
         window.addEventListener('keydown', keydown);
         window.addEventListener('keyup', keyup);
-        window.addEventListener('blur', function() { keys.left=false; keys.right=false; keys.space=false; });
-        canvas.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+        window.addEventListener('blur', () => {
+            keys.left = false;
+            keys.right = false;
+            keys.space = false;
+        });
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-        document.getElementById('restartButton').addEventListener('click', function() {
+        document.getElementById('restartButton').addEventListener('click', () => {
             resetGame();
             lastSpawn = performance.now();
             lastShoot = performance.now();
@@ -638,7 +645,7 @@
 
         resetGame();
         lastSpawn = performance.now();
-        var now = performance.now();
+        now = performance.now();
         requestAnimationFrame(gameLoop);
     })();
 </script>
